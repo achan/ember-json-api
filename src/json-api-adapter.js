@@ -58,8 +58,15 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
     var data = {};
 
     var snapshot = record._createSnapshot();
-    data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+    var recordKey = this.pathForType(type.typeKey);
+    data[recordKey] = store.serializerFor(type.typeKey).serialize(snapshot, {
       includeId: true
+    });
+
+    record.eachRelationship(function(name, descriptor) {
+      if (descriptor.kind === 'hasMany') {
+        delete data[recordKey].links[name];
+      }
     });
 
     return this.ajax(this.buildURL(type.typeKey), 'POST', {
@@ -74,11 +81,18 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
   updateRecord: function(store, type, record) {
     var data = {};
     var snapshot = record._createSnapshot();
-    data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+    var recordKey = this.pathForType(type.typeKey);
+    data[recordKey] = store.serializerFor(type.typeKey).serialize(snapshot, {
       includeId: true
     });
 
     var id = get(record, 'id');
+
+    record.eachRelationship(function(name, descriptor) {
+      if (descriptor.kind === 'hasMany') {
+        delete data[recordKey].links[name];
+      }
+    });
 
     return this.ajax(this.buildURL(type.typeKey, id), 'PUT', {
       data: data

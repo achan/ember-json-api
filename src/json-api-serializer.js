@@ -140,15 +140,15 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
    * Use "links" key, remove support for polymorphic type
    */
   serializeBelongsTo: function(record, json, relationship) {
+    if (relationship.kind !== 'belongsTo') return;
+
     var attr = relationship.key;
     var belongsTo = record.belongsTo(attr);
     var type = this.keyForRelationship(relationship.type.typeKey);
     var key = this.keyForRelationship(attr);
 
-    if (isNone(belongsTo)) return;
-
     json.links = json.links || {};
-    json.links[key] = belongsToLink(key, type, get(belongsTo, 'id'));
+    json.links[key] = isNone(belongsTo) ? null : belongsToLink(key, type, get(belongsTo, 'id'));
   },
 
   /**
